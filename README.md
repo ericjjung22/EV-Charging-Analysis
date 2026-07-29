@@ -4,7 +4,9 @@
 
 **Which California zip codes have the largest gap between EV adoption and public charging capacity — and where should the next public chargers be built?**
 
-California added more than 1.5 million electric vehicles between 2021 and 2026. This project measures whether public charging kept up, finds the neighborhoods where it did not, and — importantly — corrects a flaw in its own first answer.
+California added more than 1.5 million electric vehicles between January 2021 and December 2025. This project measures whether public charging kept up, finds the neighborhoods where it did not, and — importantly — corrects a flaw in its own first answer.
+
+**[Jump to the interactive dashboard ↓](#interactive-map-the-gap-zip-code-by-zip-code)**
 
 ---
 
@@ -15,7 +17,7 @@ Three raw files, all publicly available:
 | File | Source | What it contains |
 |---|---|---|
 | `zip2021.csv` | CA DMV, via data.ca.gov | Vehicle registrations as of 1/1/2021 by zip code, fuel type, make, model year, and duty class (~678,000 rows) |
-| `zip2025.csv` | CA DMV, via data.ca.gov | The same file for the 1/1/2026 snapshot (~504,000 rows) |
+| `zip2025.csv` | CA DMV, via data.ca.gov | The same file for the 12/31/2025 snapshot (~504,000 rows) |
 | `altfuelstation.csv` | U.S. Dept. of Energy, AFDC | Every public electric charging station in California — location, coordinates, port counts by charger type, network, and open date (~20,300 rows) |
 
 Two reference files were added later: `zip_city.csv` (zip → city and county) for labels and county rollups, and `uszips.csv` (zip → center coordinates) for the distance analysis.
@@ -27,7 +29,7 @@ The DMV files are the **demand** side: how many EVs live in each zip code. The A
 
 Raw data is not committed to this repo. Download into `ev_data/ev_raw/` using these filenames:
 
-- CA DMV "Vehicle Fuel Type Count by Zip Code" (1/1/2021 and 1/1/2026 snapshots) → `zip2021.csv`, `zip2025.csv`
+- CA DMV "Vehicle Fuel Type Count by Zip Code" (1/1/2021 and 12/31/2025 snapshots) → `zip2021.csv`, `zip2025.csv`
 - AFDC station data, filtered to Electric / California / Public / All statuses → `altfuelstation.csv`
 - Zip → city/county reference:
   ```bash
@@ -54,17 +56,17 @@ All cleaning is done in SQL using DuckDB (`02_clean.py`), which queries the raw 
 |---|---|
 | Open public charging stations | 19,855 |
 | Public charging ports | 65,845 (47,607 Level 2 · 18,238 DC fast) |
-| EVs, 2021 | 624,795 |
-| EVs, 2026 | 2,191,154 |
+| EVs, 1/1/2021 | 624,795 |
+| EVs, 12/31/2025 | 2,191,154 |
 | Zip codes in final table | 2,436 |
 
 ---
 
 ## Finding 1: statewide, charging supply kept pace with demand
 
-![EV and charging port growth, 2021-2026](figures/growth_comparison.png)
+![EV and charging port growth, 2021-2025](figures/growth_comparison.png)
 
-Both sides of the market grew at nearly the same rate. EVs grew 3.5× (624,795 → 2,191,154) while public charging ports grew 4.0× (15,288 → 60,381, measured as of January 1 each year). Crowding actually eased slightly: about **41 EVs per public port in 2021 versus 36 in 2026**.
+Both sides of the market grew at nearly the same rate. Over the five years, EVs grew 3.5× (624,795 → 2,191,154) while public charging ports grew 4.0× (15,288 → 60,381). Crowding actually eased slightly: about **41 EVs per public port at the start of 2021 versus 36 at the end of 2025**.
 
 So California is not suffering a statewide charger shortage. If there is a problem, it is a problem of *distribution* — which is what the rest of this analysis tests.
 
@@ -111,8 +113,8 @@ Across all zip codes with at least 1,000 EVs:
 `07_disparity.py` measures how evenly charging is distributed relative to where EVs are, using the **Gini coefficient** — the same statistic used for income inequality, where 0 means perfectly proportional and 1 means everything sits in one place. Computing it at three geographic scales isolates how much of the apparent gap is genuine:
 
 | How access is measured | Gini |
-|---|---|
-| Ports inside each zip code | **0.575** |
+|---|---| 
+| Ports inside each zip code | **0.572** |
 | Ports within 10 miles of each zip | **0.206** |
 | Ports within each county | **0.170** |
 
@@ -169,7 +171,7 @@ The pattern is geographic rather than random: the list clusters in the Inland Em
 - **Charging supply reflects the DOE/AFDC registry.** Commercial databases list additional chargers (destination chargers, private garages, some workplace units), so absolute counts may understate real supply.
 - **Home charging is not measured.** Public port scarcity matters far more to renters and apartment dwellers than to homeowners with a garage outlet. Two zips with identical ratios can face very different real-world problems.
 - **Historical port counts are reconstructed from station open dates**, so stations that have since closed are missing, making measured port growth an upper estimate. 26 open stations have no recorded open date.
-- **EV registrations exist only as two snapshots** (2021 and 2026), so growth is measured between endpoints rather than as a continuous trend.
+- **EV registrations exist only as two snapshots** (1/1/2021 and 12/31/2025), so growth is measured between endpoints rather than as a continuous trend. Charging supply is reconstructed at the start of each year, so the two series are aligned to within one day at each end.
 - **Coverage gaps in reference files.** 715 zip codes (0.4% of EVs) have no center point and are excluded from the distance analysis; 798 (about 4% of EVs) have no county match and are excluded from the county rollup only.
 - **Registration location is not charging location.** Vehicles are counted where they are registered, which does not capture commuting or highway-corridor demand.
 
