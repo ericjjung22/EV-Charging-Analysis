@@ -1,0 +1,12 @@
+# Raw datasets
+ev_data/ev_raw/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
